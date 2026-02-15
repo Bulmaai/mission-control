@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mission Control
 
-## Getting Started
+OpenClaw Agent Dashboard — orchestrate tasks across your agent fleet with kanban boards, real-time updates, and escalation handling.
 
-First, run the development server:
+**Live URL:** https://vmi3077352.tail0e0648.ts.net:8443/
+
+**GitHub:** https://github.com/Bulmaai/mission-control
+
+## Features
+
+- **Dashboard Overview** — See all agents, current tasks, and activity feed at a glance
+- **Real-time Updates** — Live data via Server-Sent Events (3-second refresh)
+- **Kanban Boards** — Swipeable task boards per agent (Inbox → Planning → In Progress → Done)
+- **Escalation System** — Agents can escalate system-level tasks to Saraai
+- **Create Tasks** — Assign tasks to agents with priority levels
+- **AI Planning** — Q&A workflow to generate execution plans for tasks
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Database:** SQLite (better-sqlite3) + Drizzle ORM
+- **Testing:** Vitest + React Testing Library
+
+## Quick Start
 
 ```bash
+# Clone
+git clone https://github.com/Bulmaai/mission-control.git
+cd mission-control
+
+# Install
+npm install
+
+# Setup database
+npm run db:init
+
+# Seed sample data
+npx tsx src/scripts/seed-sample.ts
+
+# Dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App runs at `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Optional: OpenClaw Gateway connection
+OPENCLAW_GATEWAY_URL=ws://127.0.0.1:18789
+OPENCLAW_GATEWAY_TOKEN=your-token
+```
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm test` | Run tests |
+| `npm run db:init` | Initialize database |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### GET /api/agents
+Returns all agents with stats and current tasks.
 
-## Deploy on Vercel
+### GET /api/agents/:id/tasks
+Returns tasks assigned to specific agent.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### POST /api/tasks
+Create new task.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```json
+{
+  "title": "Task name",
+  "description": "Details",
+  "priority": "medium",
+  "assignedAgentId": "bulmaai"
+}
+```
+
+### POST /api/escalations
+Accept or decline escalations.
+
+```json
+{
+  "escalationId": 123,
+  "action": "accept" | "decline"
+}
+```
+
+## Project Structure
+
+```
+src/
+├── app/              # Next.js routes
+│   ├── api/          # API endpoints
+│   ├── agents/[id]/  # Kanban board page
+│   └── page.tsx      # Dashboard
+├── components/       # React components
+│   ├── escalation/   # Escalation UI
+│   ├── planning/     # AI planning modal
+│   └── tasks/        # Create task modal
+├── lib/
+│   ├── db/           # Database schema + client
+│   └── openclaw/     # Gateway integration
+└── types/            # TypeScript types
+```
+
+## Agents
+
+| Agent | Role | Emoji | Description |
+|-------|------|-------|-------------|
+| Bulmaai | Developer | 🔧 | Senior software engineer |
+| Saraai | System Architect | 🏗️ | Infrastructure & escalations |
+
+## License
+
+MIT

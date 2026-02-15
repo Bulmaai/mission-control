@@ -6,7 +6,8 @@ import { Task } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlanningModal } from "@/components/planning/PlanningModal";
+import { ArrowLeft, Plus, ChevronLeft, ChevronRight, Lightbulb } from "lucide-react";
 
 const columns = [
   { id: "inbox", label: "Inbox", color: "bg-gray-100" },
@@ -26,7 +27,9 @@ export default function AgentBoardPage() {
   const [agent, setAgent] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeColumn, setActiveColumn] = useState(3); // Start at "In Progress"
+  const [activeColumn, setActiveColumn] = useState(3);
+  const [planningTask, setPlanningTask] = useState<Task | null>(null);
+  const [showPlanning, setShowPlanning] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -77,6 +80,26 @@ export default function AgentBoardPage() {
 
   const nextColumn = () => setActiveColumn((prev) => Math.min(prev + 1, columns.length - 1));
   const prevColumn = () => setActiveColumn((prev) => Math.max(prev - 1, 0));
+
+  async function handlePlanComplete(taskId: number, plan: string) {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, status: "assigned" }),
+      });
+      if (res.ok) {
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to save plan:", err);
+    }
+  }
+
+  function startPlanning(task: Task) {
+    setPlanningTask(task);
+    setShowPlanning(true);
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,16 +181,27 @@ export default function AgentBoardPage() {
             </div>
           ) : (
             columnTasks.map((task) => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                onPlan={task.status === "planning" ? () => startPlanning(task) : undefined}
+              />
             ))
           )}
         </div>
       </main>
+
+      <PlanningModal
+        task={planningTask}
+        isOpen={showPlanning}
+        onClose={() => setShowPlanning(false)}
+        onComplete={handlePlanComplete}
+      />
     </div>
   );
 }
 
-function TaskCard({ task }: { task: Task }) {
+function TaskCard({ task, onPlan }: { task: Task; onPlan?: () => void }) {
   const priorityColors: Record<string, string> = {
     critical: "bg-red-100 text-red-800",
     high: "bg-orange-100 text-orange-800",
@@ -198,6 +232,21 @@ function TaskCard({ task }: { task: Task }) {
           </span>
         )}
       </div>
+      
+      {onPlan && (
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="w-full mt-2 gap-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlan();
+          }}
+        >
+          <Lightbulb className="h-4 w-4" />
+          Plan with AI
+        </Button>
+      )}
     </Card>
   );
 }

@@ -62,11 +62,13 @@ export type ActivityType =
 
 export interface Escalation {
   id: number;
-  taskId: number;
-  fromAgentId: string;
-  toAgentId: string;
+  taskId?: number;
+  title: string;
+  fromAgentId?: string;
+  fromAgent?: string;
+  toAgentId?: string;
   reason: string;
   details?: string;
-  status: "pending" | "accepted" | "declined" | "resolved";
-  createdAt: Date;
+  status?: "pending" | "accepted" | "declined" | "resolved";
+  createdAt?: Date;
 }

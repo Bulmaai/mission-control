@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Agent, Task, Activity as ActivityType } from "@/types";
+import { Agent, Task, Activity as ActivityType, Escalation } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { EscalationPanel, EscalationAlert } from "@/components/escalation/EscalationPanel";
 import { 
   Plus, 
   AlertCircle, 
@@ -40,7 +41,8 @@ export default function OverviewPage() {
   const [systemAgent, setSystemAgent] = useState<AgentWithStats | null>(null);
   const [activeAgents, setActiveAgents] = useState<AgentWithStats[]>([]);
   const [activities, setActivities] = useState<ActivityType[]>([]);
-  const [escalations, setEscalations] = useState<any[]>([]);
+  const [escalations, setEscalations] = useState<Escalation[]>([]);
+  const [showEscalations, setShowEscalations] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<{ connected: boolean; activeSessions: number } | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -116,6 +118,37 @@ export default function OverviewPage() {
     ws.current = evtSource as any;
   }
 
+  async function handleAcceptEscalation(escalationId: number) {
+    try {
+      const res = await fetch("/api/escalations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escalationId, action: "accept" }),
+      });
+      if (res.ok) {
+        // Refresh data
+        fetchInitialData();
+      }
+    } catch (err) {
+      console.error("Failed to accept escalation:", err);
+    }
+  }
+
+  async function handleDeclineEscalation(escalationId: number) {
+    try {
+      const res = await fetch("/api/escalations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escalationId, action: "decline" }),
+      });
+      if (res.ok) {
+        fetchInitialData();
+      }
+    } catch (err) {
+      console.error("Failed to decline escalation:", err);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -163,23 +196,24 @@ export default function OverviewPage() {
 
       <main className="p-4 space-y-4 max-w-md mx-auto sm:max-w-none">
         {/* Escalations Alert */}
-        {escalations.length > 0 && (
-          <Card className="p-3 bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-900">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">
-                  {escalations.length} escalation{escalations.length > 1 ? "s" : ""} pending
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Agents need system help
-                </p>
-              </div>
-              <Button size="sm" variant="ghost" className="h-7">
-                View
-              </Button>
-            </div>
-          </Card>
+        <EscalationAlert 
+          count={escalations.length} 
+          onClick={() => setShowEscalations(!showEscalations)} 
+        />
+
+        {/* Escalation Panel */}
+        {showEscalations && (
+          <section>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">
+              Pending Escalations
+            </h2>
+            <EscalationPanel 
+              escalations={escalations}
+              agents={agents}
+              onAccept={handleAcceptEscalation}
+              onDecline={handleDeclineEscalation}
+            />
+          </section>
         )}
 
         {/* System Architect Section */}

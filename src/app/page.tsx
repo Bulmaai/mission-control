@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EscalationPanel, EscalationAlert } from "@/components/escalation/EscalationPanel";
+import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
 import { 
   Plus, 
   AlertCircle, 
@@ -43,6 +44,7 @@ export default function OverviewPage() {
   const [activities, setActivities] = useState<ActivityType[]>([]);
   const [escalations, setEscalations] = useState<Escalation[]>([]);
   const [showEscalations, setShowEscalations] = useState(false);
+  const [showCreateTask, setShowCreateTask] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<{ connected: boolean; activeSessions: number } | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -149,6 +151,26 @@ export default function OverviewPage() {
     }
   }
 
+  async function handleCreateTask(task: {
+    title: string;
+    description: string;
+    priority: string;
+    assignedAgentId: string;
+  }) {
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(task),
+      });
+      if (res.ok) {
+        fetchInitialData();
+      }
+    } catch (err) {
+      console.error("Failed to create task:", err);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -187,7 +209,7 @@ export default function OverviewPage() {
               )}
             </p>
           </div>
-          <Button size="sm" className="gap-1">
+          <Button size="sm" className="gap-1" onClick={() => setShowCreateTask(true)}>
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">New Task</span>
           </Button>
@@ -283,6 +305,14 @@ export default function OverviewPage() {
           </Card>
         </section>
       </main>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        agents={agents}
+        isOpen={showCreateTask}
+        onClose={() => setShowCreateTask(false)}
+        onCreate={handleCreateTask}
+      />
     </div>
   );
 }

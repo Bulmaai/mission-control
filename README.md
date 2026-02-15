@@ -23,6 +23,11 @@ OpenClaw Agent Dashboard — orchestrate tasks across your agent fleet with kanb
 - **Database:** SQLite (better-sqlite3) + Drizzle ORM
 - **Testing:** Vitest + React Testing Library
 
+## Requirements
+
+- Node.js 22+
+- npm or pnpm
+
 ## Quick Start
 
 ```bash
@@ -33,17 +38,36 @@ cd mission-control
 # Install
 npm install
 
-# Setup database
+# Create .env file (optional)
+cp .env.example .env
+
+# Setup database (creates mission-control.db in project root)
 npm run db:init
 
 # Seed sample data
-npx tsx src/scripts/seed-sample.ts
+npm run db:seed
 
 # Dev server
 npm run dev
 ```
 
 App runs at `http://localhost:3000`
+
+## Production Deployment
+
+```bash
+# Build
+npm run build
+
+# Start (port 3000, or set PORT env var)
+npm start
+```
+
+Or use PM2:
+```bash
+npm install -g pm2
+pm2 start npm --name "mission-control" -- start
+```
 
 ## Environment Variables
 
@@ -114,8 +138,10 @@ src/
 
 | Agent | Role | Emoji | Description |
 |-------|------|-------|-------------|
-| Bulmaai | Developer | 🔧 | Senior software engineer |
-| Saraai | System Architect | 🏗️ | Infrastructure & escalations |
+| Bulmaai | Developer | 🔧 | Senior software engineer — builds code, APIs, web apps |
+| Saraai | System Architect | 🏗️ | System Architect & Infrastructure Orchestrator — handles escalations, server config, security |
+
+*More specialist agents planned (9 total).*
 
 ## License
 
